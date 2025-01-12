@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify,render_template,redirect,url_for
 from models import db,Course,User,Registration
 app = Flask(__name__)
 
@@ -7,8 +7,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
 
-# Adding users 
-@app.route('/user',methods=['POST'])
+# Adding users  by using postman
+"""@app.route('/user',methods=['POST'])
 def add_new_user():
     userData=request.get_json()
     new_user_Data=User(
@@ -18,10 +18,45 @@ def add_new_user():
     )
     db.session.add(new_user_Data)
     db.session.commit()
+    return jsonify({'message': 'User added successfully'})"""
+    
+# Adding User by using jinja syntax
+
+@app.route('/')
+def index():
+    user=User.query.all()
+    return render_template('home.html',user=user)
+
+# Route for adding new user
+@app.route('/user', methods=['POST','GET'])
+def add_new_user():
+    if request.method == 'POST':
+        # Handle form data from POST requests
+        username = request.form['username']
+        email = request.form['email']
+        role = request.form['role']
+    elif request.method == 'GET':
+        # Handle query parameters from GET requests
+        username = request.args.get('username')
+        email = request.args.get('email')
+        role = request.args.get('role')
+    else:
+        return jsonify({'error': 'Invalid request method'})
+
+    new_user = User(
+        username=username,
+        email=email,
+        role=role
+    )
+    db.session.add(new_user)
+    db.session.commit()
+
     return jsonify({'message': 'User added successfully'})
+
+
 # implementing Admin Routes
 # adding courses
-@app.route('/admin/courses', methods=['POST'])
+''''@app.route('/admin/courses', methods=['POST'])
 def add_new_course():
     data = request.get_json()
     new_course = Course(
@@ -35,8 +70,47 @@ def add_new_course():
         db.session.commit()
         return jsonify({'message': 'Course added successfully'})
     else:
-        return jsonify({'message':'Invalid Access'})
+        return jsonify({'message':'Invalid Access'})'''
 
+
+
+# adding course by admin 
+@app.route('/course')
+def course():
+    course=Course.query.all()
+    return render_template('course.html',course=course)
+# new code from chatgpt for checking
+
+@app.route('/admin/courses', methods=['POST','GET'])
+def add_new_course():
+    # Fetch data from the form
+    role = request.form.get('role')  # Role is expected in form data
+    title = request.form.get('title')  # Title is expected in form data
+    description = request.form.get('description')  # Description is expected in form data
+    price = request.form.get('price')  # Price is expected in form data
+    print(role)
+    # Check if all required fields are provided
+    if not role or not title or not description or not price:
+        return jsonify({'message': 'All fields are required'}), 400
+
+    # Check if the role is Admin
+    if role != 'Admin':
+        return jsonify({'message': 'Invalid Access. Only Admins can add courses.'}), 403
+
+    # Create new course and save it to the database
+    new_course = Course(
+        role=role,
+        title=title,
+        description=description,
+        price=price
+    )
+
+    db.session.add(new_course)
+    db.session.commit()
+
+    return jsonify({'message': 'Course added successfully'}), 201
+
+    
 # view all courses (getting courses)
 
 @app.route('/admin/view',methods=['GET'])
@@ -78,7 +152,7 @@ def delete_course_details(id):
 
 
 @app.route('/view/courses',methods=['GET'])
-def get_available_courses():
+def get_courses():
     courses = Course.query.all()
     return jsonify([{
             'id': course.id,
