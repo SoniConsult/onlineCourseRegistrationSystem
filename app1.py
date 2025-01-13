@@ -79,36 +79,37 @@ def add_new_course():
 def course():
     course=Course.query.all()
     return render_template('course.html',course=course)
-# new code from chatgpt for checking
+
 
 @app.route('/admin/courses', methods=['POST','GET'])
 def add_new_course():
-    # Fetch data from the form
-    role = request.form.get('role')  # Role is expected in form data
-    title = request.form.get('title')  # Title is expected in form data
-    description = request.form.get('description')  # Description is expected in form data
-    price = request.form.get('price')  # Price is expected in form data
-    print(role)
-    # Check if all required fields are provided
-    if not role or not title or not description or not price:
-        return jsonify({'message': 'All fields are required'}), 400
+    if request.method=='POST':
+        role = request.form.get('role')  # Role is expected in form data
+        title = request.form.get('title')  # Title is expected in form data
+        description = request.form.get('description')  # Description is expected in form data
+        price = request.form.get('price')  # Price is expected in form data
+        print(role)
+        # Check if all required fields are provided
+        if not role or not title or not description or not price:
+            return jsonify({'message': 'All fields are required'}), 400
 
-    # Check if the role is Admin
-    if role != 'Admin':
-        return jsonify({'message': 'Invalid Access. Only Admins can add courses.'}), 403
+        # Check if the role is Admin
+        if role != 'Admin':
+            return jsonify({'message': 'Invalid Access. Only Admins can add courses.'}), 403
 
-    # Create new course and save it to the database
-    new_course = Course(
-        role=role,
-        title=title,
-        description=description,
-        price=price
-    )
+        # Create new course and save it to the database
+        new_course = Course(
+            role=role,
+            title=title,
+            description=description,
+            price=price
+        )
 
-    db.session.add(new_course)
-    db.session.commit()
+        db.session.add(new_course)
+        db.session.commit()
 
-    return jsonify({'message': 'Course added successfully'}), 201
+        return jsonify({'message': 'Course added successfully'}), 201
+    return render_template('course.html')
 
     
 # view all courses (getting courses)
